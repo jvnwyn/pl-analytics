@@ -84,7 +84,7 @@ By completing this project, you will gain hands-on experience with:
 
 ---
 
-# 🏗 System Architecture
+# System Architecture
 
 Football API / CSV
 
