@@ -210,10 +210,10 @@ jupyter lab
 
 # Project Roadmap
 
-- [ ] Phase 1 — Data Collection
-- [ ] Phase 2 — Data Cleaning
-- [ ] Phase 3 — Exploratory Data Analysis
-- [ ] Phase 4 — Feature Engineering
+- [x] Phase 1 — Data Collection
+- [x] Phase 2 — Data Cleaning
+- [x] Phase 3 — Exploratory Data Analysis
+- [x] Phase 4 — Feature Engineering
 - [ ] Phase 5 — AWS Data Lake
 - [ ] Phase 6 — AWS Glue
 - [ ] Phase 7 — SQL Analytics
