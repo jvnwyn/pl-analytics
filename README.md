@@ -24,7 +24,7 @@ The workflow includes:
 
 ---
 
-# 🛠 Tech Stack
+# Tech Stack
 
 ## Programming
 
@@ -145,9 +145,9 @@ premier-league-analytics/
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/premier-league-analytics.git
+git clone https://github.com/yourusername/pl-analytics.git
 
-cd premier-league-analytics
+cd pl-analytics
 ```
 
 ---
