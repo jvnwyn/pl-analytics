@@ -164,9 +164,17 @@ python -m venv .venv
 
 ### Windows
 
-```bash
+If you get an error about scripts being disabled, run this first (only needs to be done once per terminal session):
+
+​```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+​```
+
+Then activate:
+
+​```powershell
 .venv\Scripts\activate
-```
+​```
 
 ### macOS/Linux
 
@@ -205,6 +213,26 @@ python -m ipykernel install --user --name premier-league-analytics --display-nam
 ```bash
 jupyter lab
 ```
+
+---
+
+# Environment Variables
+
+This project needs a `.env` file in the project root (same folder as `README.md`) to store your API key and AWS settings. This file is git-ignored and should never be committed.
+
+Copy the template below into a new file named `.env`:
+
+​```
+# football-data.org API key
+# Register for free at: https://www.football-data.org/client/register
+FOOTBALL_DATA_API_KEY=your_api_key_here
+
+# AWS settings
+AWS_REGION=ap-southeast-2
+AWS_S3_BUCKET=your-bucket-name
+​```
+
+**Note:** AWS credentials themselves (Access Key ID / Secret Access Key) are configured separately via `aws configure`, and are **not** stored in this file.
 
 ---
 
