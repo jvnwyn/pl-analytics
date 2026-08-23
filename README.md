@@ -194,9 +194,36 @@ python -m pip install --upgrade pip
 
 ## 5. Install dependencies
 
-```bash
+​```bash
 pip install -r requirements.txt
-```
+​```
+
+This installs all required packages, including:
+
+- **pandas / numpy** — data manipulation
+- **requests** — football-data.org API calls
+- **python-dotenv** — loading `.env` configuration
+- **matplotlib / seaborn** — data visualization
+- **scikit-learn** — machine learning (Phase 9)
+- **boto3** — AWS SDK (S3, Athena)
+- **s3fs** — lets pandas read/write directly from S3 paths
+- **awscli** — AWS CLI, installed via pip since it doesn't require admin/IT permissions on locked-down systems
+
+---
+
+# Troubleshooting
+
+**PowerShell blocks venv activation ("running scripts is disabled")**
+Run once per terminal session before activating:
+​```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+​```
+
+**`aws` command not found**
+Your `.venv` must be activated first — check for `(.venv)` at the start of your terminal prompt. If missing, run `.venv\Scripts\activate`.
+
+**Notebook can't find data files (FileNotFoundError)**
+All notebooks assume they're run from inside the `notebooks/` folder, using relative paths like `../data/raw/`. Confirm with `os.getcwd()` if a path error occurs.
 
 ---
 
@@ -242,9 +269,9 @@ AWS_S3_BUCKET=your-bucket-name
 - [x] Phase 2 — Data Cleaning
 - [x] Phase 3 — Exploratory Data Analysis
 - [x] Phase 4 — Feature Engineering
-- [ ] Phase 5 — AWS Data Lake
-- [ ] Phase 6 — AWS Glue
-- [ ] Phase 7 — SQL Analytics
+- [x] Phase 5 — AWS Data Lake
+- [x] Phase 6 — AWS Glue
+- [x] Phase 7 — SQL Analytics
 - [ ] Phase 8 — Power BI Dashboard
 - [ ] Phase 9 — Machine Learning
 - [ ] Phase 10 — Automation with AWS Lambda
