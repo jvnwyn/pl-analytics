@@ -272,8 +272,8 @@ AWS_S3_BUCKET=your-bucket-name
 - [x] Phase 5 — AWS Data Lake
 - [x] Phase 6 — AWS Glue
 - [x] Phase 7 — SQL Analytics
-- [ ] Phase 8 — Power BI Dashboard
-- [ ] Phase 9 — Machine Learning
+- [x] Phase 8 — Power BI Dashboard
+- [x] Phase 9 — Machine Learning
 - [ ] Phase 10 — Automation with AWS Lambda
 
 ---
