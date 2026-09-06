@@ -503,33 +503,29 @@ Predict match outcomes.
 
 ## Workflow
 
-AWS Lambda
+AWS EventBridge (daily schedule)
 
 ↓
 
-Fetch Latest Match Data
+AWS Lambda — fetch recent finished matches from football-data.org
 
 ↓
 
-Upload to S3
-
-↓
-
-Glue Updates Tables
-
-↓
-
-Athena Refreshes
-
-↓
-
-Power BI Refreshes
+Upload raw match data to S3 (`raw/raw_matches_incremental/<date>/matches.csv`)
 
 ## Skills
 
 - AWS Lambda
+- IAM (least-privilege policy design)
+- Amazon EventBridge (scheduled triggers)
 - Automation
 - Cloud Pipelines
+
+## Future Improvements
+
+- Glue/Athena auto-refresh
+- Automated feature recomputation
+- Power BI Service scheduled refresh
 
 ---
 
