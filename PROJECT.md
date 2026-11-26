@@ -1,644 +1,186 @@
-# Premier League Analytics Platform
+# Premier League Analytics Platform: Project Guide
 
-An end-to-end football analytics platform that collects, processes, stores, analyzes, visualizes, and predicts Premier League match data using Python, Jupyter Notebook, AWS, SQL, and Power BI.
-
----
-
-# Project Goal
-
-Build a cloud-based analytics platform that demonstrates the complete data analytics lifecycle:
-
-- Collect Premier League data
-- Clean and transform raw data
-- Perform exploratory data analysis (EDA)
-- Store data in AWS
-- Query data using SQL
-- Build interactive Power BI dashboards
-- Predict future match outcomes using Machine Learning
-- Automate data updates
+This document covers what the project set out to do, how the pipeline works, what it is built with, how to run it, and the roadmap. Results, dashboards, and conclusions are in [README.md](README.md).
 
 ---
 
-# Learning Objectives
+# Objectives
 
-By completing this project, you will gain hands-on experience with:
-
-- Python
-- Pandas
-- NumPy
-- SQL
-- Jupyter Notebook
-- Data Cleaning
-- Exploratory Data Analysis
-- Feature Engineering
-- AWS S3
-- AWS Glue
-- Amazon Athena
-- Power BI
-- Power Query
-- DAX
-- Machine Learning
-- Git & GitHub
+1. **Collect** Premier League match data through a REST API (football-data.org).
+2. **Clean and validate** the data so it is analysis-ready.
+3. **Engineer leakage-safe features** (rolling form, streaks, goal averages, clean sheet rate, rest days, head-to-head record, prior-season position) that only use information available before each match.
+4. **Build a cloud data lake** in Amazon S3, catalog it with AWS Glue, and query it with SQL in Amazon Athena.
+5. **Visualize** the data in Power BI dashboards connected to Athena.
+6. **Predict match outcomes** (home win, draw, away win) with machine learning, evaluated on a time-based split and reported honestly.
+7. **Automate** data refresh with AWS Lambda.
 
 ---
 
-# 🛠 Tech Stack
+# Workflow
 
-## Programming
+```mermaid
+flowchart LR
+    A[football-data.org API] --> B[Python ETL<br/>cleaning + feature engineering]
+    B --> C[(Amazon S3<br/>data lake)]
+    C --> D[AWS Glue<br/>Data Catalog]
+    D --> E[Amazon Athena<br/>SQL]
+    E --> F[Power BI<br/>dashboards]
+    B --> G[Machine learning<br/>scikit-learn / XGBoost]
+    G -->|predictions| C
+```
 
-- Python
-- SQL
+| Stage | What happens | Notebook |
+|---|---|---|
+| 1. Collection | Pull matches and teams for 3 seasons (2023 to 2025) from the API into `data/raw/` | `01_data_collection.ipynb` |
+| 2. Cleaning | Flatten nested API fields, keep finished matches, validate team names and IDs, save to `data/processed/` | `02_data_cleaning.ipynb` |
+| 3. Exploration | Scoring, defense, home advantage, seasonal trends, upsets | `03_exploratory_analysis.ipynb` |
+| 4. Feature engineering | Build leakage-safe rolling features, save to `data/features/` | `04_feature_engineering.ipynb` |
+| 5. Upload | Send datasets to S3, one folder per dataset | `05_upload_to_s3.ipynb` |
+| 6. SQL analysis | Query the Athena tables | `06_sql_analysis.ipynb` |
+| 7. Machine learning | Train and compare models, export predictions | `07_machine_learning.ipynb` |
+| 8. Season simulation | Simulate a season with the trained model | `08_season_simulation.ipynb` |
+| 9. Dashboards | Power BI pages built on the Athena tables | Power BI Desktop |
 
-## Development Environment
+## Key design decisions
 
-- Jupyter Notebook
-- VS Code
-
-## Python Libraries
-
-- pandas
-- numpy
-- matplotlib
-- plotly
-- seaborn
-- requests
-- scikit-learn
-- sqlalchemy
-- boto3
-
-## Cloud
-
-- AWS S3
-- AWS Glue
-- Amazon Athena
-- AWS Lambda (Future)
-
-## Visualization
-
-- Power BI
-
-## Version Control
-
-- Git
-- GitHub
+- **No data leakage:** every rolling feature is shifted so a match's own result is never used to predict it. Rolling and season-to-date features are calculated per team and season, so they reset at each season boundary. Head-to-head win rate is the exception and spans all seasons, because two teams meet only twice per season.
+- **Time-based train/test split:** the most recent 20% of matches (222) are held out for testing. A random split would let the model see the future.
+- **One S3 folder per dataset:** Athena reads every file under a table's `LOCATION` folder as one table, so datasets that share a folder get merged and produce duplicate rows.
+- **Simple model selected:** Logistic Regression matched or beat Random Forest and XGBoost on this data, so the simpler and more interpretable model was kept.
 
 ---
 
-# 🏗 System Architecture
+# What Was Used
 
-Football API / CSV
-
-↓
-
-Python (Jupyter Notebook)
-
-↓
-
-Data Cleaning
-
-↓
-
-Feature Engineering
-
-↓
-
-Amazon S3 Data Lake
-
-↓
-
-AWS Glue
-
-↓
-
-Amazon Athena
-
-↓
-
-Power BI Dashboard
-
-↓
-
-Machine Learning Predictions
+| Layer | Tools |
+|---|---|
+| Data source | football-data.org API (free tier: 10 requests per minute, most recent 3 seasons only) |
+| Data processing | Python, pandas, NumPy, requests, python-dotenv |
+| Notebook visuals | Matplotlib, Seaborn |
+| Machine learning | scikit-learn (Logistic Regression, Random Forest), XGBoost |
+| Cloud | AWS S3, Glue, Athena, IAM, boto3, s3fs, AWS CLI |
+| BI | Power BI Desktop, Amazon Athena ODBC driver, DAX |
+| Environment | Python virtual environment, Jupyter notebooks in VS Code, Git and GitHub |
 
 ---
 
-# Repository Structure
+# How to Run
 
-premier-league-analytics/
+## 1. Prerequisites
 
-├── notebooks/
-│   ├── 01_data_collection.ipynb
-│   ├── 02_data_cleaning.ipynb
-│   ├── 03_exploratory_analysis.ipynb
-│   ├── 04_feature_engineering.ipynb
-│   ├── 05_upload_to_s3.ipynb
-│   ├── 06_sql_analysis.ipynb
-│   ├── 07_machine_learning.ipynb
-│
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── features/
-│
-├── dashboards/
-│   └── PremierLeagueDashboard.pbix
-│
-├── sql/
-│   ├── create_tables.sql
-│   └── analytics_queries.sql
-│
-├── aws/
-│   ├── architecture.png
-│   └── lambda_update.py
-│
-├── reports/
-│   ├── screenshots/
-│   └── dashboard.pdf
-│
-├── requirements.txt
-│
-├── README.md
-│
-└── PROJECT.md
+- Python 3 (developed on 3.14)
+- An AWS account and an IAM user with S3, Glue, and Athena access
+- A free API key from [football-data.org](https://www.football-data.org/client/register)
+- Power BI Desktop (Windows) and the Amazon Athena ODBC driver, for the dashboards only
 
----
+## 2. Install
 
-# Development Roadmap
+```bash
+python -m venv .venv
+```
 
----
+Activate the virtual environment.
 
-# Phase 1 — Data Collection
+**Windows (PowerShell).** If activation is blocked with a "running scripts is disabled" error, run this first (it applies to the current terminal session only):
 
-## Objective
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.venv\Scripts\activate
+```
 
-Collect Premier League data from an online source.
+**macOS / Linux:**
 
-## Notebook
+```bash
+source .venv/bin/activate
+```
 
-01_data_collection.ipynb
+Then install the dependencies:
 
-## Tasks
+```bash
+pip install -r requirements.txt
+```
 
-- Download historical match data
-- Download league standings
-- Download team information
-- Save raw datasets
-- Inspect data quality
+## 3. Environment variables
 
-## Output
+Create a `.env` file in the project root. It is git-ignored and must never be committed.
 
-- raw_matches.csv
-- raw_teams.csv
-- raw_standings.csv
+```
+FOOTBALL_DATA_API_KEY=your_api_key_here
+AWS_REGION=ap-southeast-2
+AWS_S3_BUCKET=your-bucket-name
+AWS_ATHENA_OUTPUT_LOCATION=s3://your-athena-results-bucket/
+```
 
-## Skills
+AWS credentials (access key ID and secret access key) are **not** stored here. Configure them with `aws configure`.
 
-- API Integration
-- Data Collection
-- Pandas
+## 4. AWS setup
 
----
+1. Create two S3 buckets: one for the data lake and one for Athena query results.
+2. Create an IAM user with S3, Glue, and Athena permissions, then run `aws configure` with its access keys and your region.
+3. In the Athena query editor, run `CREATE DATABASE IF NOT EXISTS pl_analytics;`
+4. Upload the datasets with `05_upload_to_s3.ipynb`.
+5. Create an external table for each dataset (example below). Athena runs one statement per query.
 
-# Phase 2 — Data Cleaning
+**Important:** upload each dataset into its **own S3 folder** (for example `processed/clean_matches/clean_matches.csv`).
 
-## Notebook
+<details>
+<summary>Example table definition</summary>
 
-02_data_cleaning.ipynb
+```sql
+CREATE EXTERNAL TABLE IF NOT EXISTS pl_analytics.clean_matches_multi_season (
+    id BIGINT,
+    utcDate STRING,
+    status STRING,
+    matchday INT,
+    season STRING,
+    home_team_id BIGINT,
+    home_team_name STRING,
+    away_team_id BIGINT,
+    away_team_name STRING,
+    home_goals INT,
+    away_goals INT,
+    winner STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+LOCATION 's3://your-bucket-name/processed/clean_matches_multi_season/'
+TBLPROPERTIES ('skip.header.line.count'='1');
+```
 
-## Tasks
+</details>
 
-- Remove duplicates
-- Handle missing values
-- Convert dates
-- Fix inconsistent team names
-- Convert numeric columns
-- Validate dataset
+## 5. Power BI connection
 
-## Output
+1. Install the Amazon Athena ODBC driver (64-bit).
+2. Open the **64-bit** ODBC Data Source Administrator (`C:\Windows\System32\odbcad32.exe`) and add a System DSN using the Athena driver. Set the region, the S3 output location, and IAM Credentials authentication (access key ID as the username, secret key as the password).
+3. In Power BI Desktop: **Get Data**, **Amazon Athena**, enter the DSN name, choose **Import**, and select **Use Data Source Configuration** when asked for credentials.
 
-clean_matches.csv
+## 6. Run the notebooks
 
-## Skills
-
-- Data Cleaning
-- Data Wrangling
-- Pandas
+Run the notebooks in the order shown in the workflow table, from inside the `notebooks/` folder (all paths are relative to it). Use the `.venv` kernel, and use **Run All** after a kernel restart so earlier variables are defined again.
 
 ---
 
-# Phase 3 — Exploratory Data Analysis
-
-## Notebook
-
-03_exploratory_analysis.ipynb
-
-## Questions to Answer
-
-- Which team scores the most goals?
-- Which team has the strongest defense?
-- Is home advantage significant?
-- Which months have the most goals?
-- Which teams receive the most cards?
-- Which referees issue the most cards?
-- Which stadium has the highest scoring matches?
-- Which matches had the biggest upsets?
-
-## Visualizations
-
-- Bar Charts
-- Line Charts
-- Histograms
-- Heatmaps
-- Scatter Plots
-- Box Plots
-- Correlation Matrix
-
-## Skills
-
-- Exploratory Data Analysis
-- Data Visualization
-
----
-
-# Phase 4 — Feature Engineering
-
-## Notebook
-
-04_feature_engineering.ipynb
-
-## Features to Create
-
-- Goal Difference
-- Rolling Form (Last 5 Matches)
-- Home Win Percentage
-- Away Win Percentage
-- Average Goals Scored
-- Average Goals Conceded
-- Rolling Points
-- Win Streak
-- Loss Streak
-- Clean Sheet Percentage
-- Days Since Last Match
-- Head-to-Head Statistics
-
-## Future Features
-
-- Elo Rating
-- Expected Goals (xG)
-- Expected Points (xPts)
-
-## Skills
-
-- Feature Engineering
-
----
-
-# Phase 5 — AWS Data Lake
-
-## Notebook
-
-05_upload_to_s3.ipynb
-
-## Tasks
-
-- Create an AWS S3 bucket
-- Upload processed datasets
-- Organize files into folders
-
-## Folder Structure
-
-premier-league-analytics/
-
-- raw/
-- processed/
-- features/
-
-## Skills
-
-- AWS S3
-- Cloud Storage
-
----
-
-# Phase 6 — AWS Glue
-
-## Tasks
-
-- Create Glue Database
-- Crawl S3 bucket
-- Generate tables automatically
-
-## Tables
-
-- Matches
-- Teams
-- Standings
-- Features
-
-## Skills
-
-- AWS Glue
-- Data Catalog
-- ETL
-
----
-
-# Phase 7 — SQL Analysis
-
-## Notebook
-
-06_sql_analysis.ipynb
-
-## Query Examples
-
-- Top scoring teams
-- Average goals per season
-- Home vs Away win percentage
-- Highest scoring matches
-- Teams with the best defense
-- Teams with the most clean sheets
-- Teams with the most yellow cards
-- Most penalties awarded
-
-## Skills
-
-- SQL
-- Amazon Athena
-
----
-
-# Phase 8 — Power BI Dashboard
-
-## Executive Dashboard
-
-### KPIs
-
-- Total Matches
-- Total Goals
-- Average Goals
-- Home Win %
-- Away Win %
-- Draw %
-- Total Teams
-
-### Charts
-
-- League Table
-- Monthly Goals
-- Win Distribution
-- Goals Timeline
-
----
-
-## Team Analysis Dashboard
-
-### Metrics
-
-- Wins
-- Draws
-- Losses
-- Goal Difference
-- Points
-- Recent Form
-- Home Performance
-- Away Performance
-
----
-
-## Offensive Dashboard
-
-- Goals
-- Shots
-- Shots on Target
-- Conversion Rate
-- Expected Goals
-
----
-
-## Defensive Dashboard
-
-- Goals Conceded
-- Clean Sheets
-- Tackles
-- Fouls
-- Yellow Cards
-- Red Cards
-
----
-
-## Stadium Dashboard
-
-- Home Win Percentage
-- Goals Per Match
-- Average Attendance
-
----
-
-## Referee Dashboard
-
-- Yellow Cards
-- Red Cards
-- Fouls
-- Penalties Awarded
-
----
-
-## Prediction Dashboard
-
-- Home Win Probability
-- Draw Probability
-- Away Win Probability
-- Confidence Score
-- Predicted Winner
-
-## Skills
-
-- Power BI
-- Power Query
-- DAX
-- Dashboard Design
-
----
-
-# Phase 9 — Machine Learning
-
-## Notebook
-
-07_machine_learning.ipynb
-
-## Objective
-
-Predict match outcomes.
-
-## Target Classes
-
-- Home Win
-- Draw
-- Away Win
-
-## Models
-
-- Logistic Regression
-- Random Forest
-- XGBoost
-
-## Evaluation Metrics
-
-- Accuracy
-- Precision
-- Recall
-- F1 Score
-- ROC AUC
-- Confusion Matrix
-
-## Future Improvements
-
-- Hyperparameter Tuning
-- Cross Validation
-- SHAP Explainability
-
----
-
-# Phase 10 — Automation
-
-## Workflow
-
-AWS Lambda
-
-↓
-
-Fetch Latest Match Data
-
-↓
-
-Upload to S3
-
-↓
-
-Glue Updates Tables
-
-↓
-
-Athena Refreshes
-
-↓
-
-Power BI Refreshes
-
-## Skills
-
-- AWS Lambda
-- Automation
-- Cloud Pipelines
-
----
-
-# Key Performance Indicators (KPIs)
-
-- Matches Played
-- Goals Scored
-- Goals Conceded
-- Goal Difference
-- Win Percentage
-- Draw Percentage
-- Loss Percentage
-- Home Win Percentage
-- Away Win Percentage
-- Average Goals Per Match
-- Clean Sheets
-- Possession
-- Shots
-- Shots on Target
-- Conversion Rate
-- Fouls
-- Yellow Cards
-- Red Cards
-- Penalties
-- Attendance
-
----
-
-# Machine Learning Features
-
-- Rolling Form
-- Home Advantage
-- Away Form
-- Goal Difference
-- Average Goals Scored
-- Average Goals Conceded
-- Head-to-Head Results
-- Elo Rating
-- Win Streak
-- Clean Sheet Percentage
-- Rest Days
-
----
-
-# Skills Demonstrated
-
-- Python
-- Jupyter Notebook
-- Pandas
-- NumPy
-- Data Cleaning
-- Exploratory Data Analysis
-- Feature Engineering
-- SQL
-- AWS S3
-- AWS Glue
-- Amazon Athena
-- Power BI
-- Power Query
-- DAX
-- Machine Learning
-- ETL Pipelines
-- Cloud Analytics
-- Git
-- GitHub
-
----
-
-# Stretch Goals
-
-- Live API integration
-- Daily automated updates
-- Interactive Streamlit dashboard
-- Player-level analytics
-- Fantasy Premier League recommendation engine
-- Expected Goals (xG) model
-- Docker containerization
-- GitHub Actions CI/CD
-- Power BI Service deployment
-- Infrastructure as Code (Terraform)
-
----
-
-# Final Deliverables
-
-- Jupyter Notebook analysis
-- Clean datasets
-- AWS cloud pipeline
-- SQL analytics queries
-- Interactive Power BI dashboard
-- Machine learning prediction model
-- GitHub repository
-- Comprehensive documentation
-- Dashboard screenshots
-- Architecture diagram
-
----
-
-# Portfolio Outcome
-
-This project demonstrates an end-to-end analytics workflow:
-
-1. Collect real-world Premier League data.
-2. Clean and prepare data using Python.
-3. Perform exploratory data analysis.
-4. Engineer predictive features.
-5. Store data in AWS.
-6. Query cloud data using SQL.
-7. Build business intelligence dashboards in Power BI.
-8. Predict match outcomes using Machine Learning.
-9. Automate data updates with AWS.
-10. Showcase the complete solution in a professional GitHub portfolio.
+# Roadmap
+
+| Phase | Status | Notes |
+|---|---|---|
+| 1. Data collection | Done | 3 seasons, 1,140 matches. The free tier blocks seasons older than the 3 most recent. |
+| 2. Data cleaning | Done | Nested API fields flattened, finished matches only, team names validated. |
+| 3. Exploratory analysis | Done | Cards, referee, and stadium analysis skipped because the free tier does not provide that data. |
+| 4. Feature engineering | Done | Leakage-safe rolling features, reset per season except head-to-head. |
+| 5. Upload to S3 | Done | One folder per dataset. |
+| 6. Glue and Athena | Done | Database `pl_analytics` with tables for matches, features, and predictions. |
+| 7. SQL analysis | Done | Queries on scoring, defense, form, streaks, home/away splits, and clean sheets. |
+| 8. Power BI dashboards | Done | Overview, team performance, offensive, defensive, prediction, and season simulation pages. |
+| 9. Machine learning | Done | Logistic Regression selected (43.7% accuracy on the held-out test set). |
+| 10. Automation (AWS Lambda) | <!-- TODO: set status --> | Function code is in `lambda/lambda_function.py`. |
+
+## Possible extensions
+
+- Predict genuinely upcoming fixtures, using features calculated only from matches already played.
+- Add cards, fouls, referee, and venue analysis with a richer data source (for example football-data.co.uk CSVs or a paid API tier).
+- CI/CD with GitHub Actions (linting and formatting checks).
+- Containerization with Docker.
+- A Streamlit front end for predictions.
