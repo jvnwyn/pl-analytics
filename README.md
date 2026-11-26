@@ -2,7 +2,7 @@
 
 An end-to-end analytics pipeline for Premier League match data: collection through a REST API, cleaning and feature engineering in Python, a cloud data lake on AWS (S3, Glue, Athena), Power BI dashboards, and a machine learning model that predicts match outcomes.
 
-> **Looking for setup instructions?** See [PROJECT.md](PROJECT.md) for the objectives, workflow, tools used, roadmap, and how to run the project.
+For the objectives, workflow, tools used, project structure, how to run the project, troubleshooting, and roadmap, see [PROJECT.md](PROJECT.md).
 
 ## Highlights
 
@@ -129,40 +129,6 @@ Permutation importance on the test set for the selected model (how much accuracy
 - The 222-match test set gives noisy accuracy estimates (roughly plus or minus 3 points).
 
 ---
-
-# Project Structure
-
-```
-pl-analytics/
-├── data/
-│   ├── raw/            # raw API pulls
-│   ├── processed/      # cleaned match data
-│   └── features/       # engineered features and model predictions
-├── notebooks/          # 01 to 08, run in order
-├── lambda/             # AWS Lambda function code
-├── reports/
-│   └── screenshots/    # images used in this README
-├── requirements.txt
-├── requirements-dev.txt
-├── .gitignore
-├── .env                # local secrets (not committed)
-└── README.md
-```
-
-# Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| PowerShell says running scripts is disabled when activating the venv | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`, then activate again |
-| `aws` command not found | The venv is not active. Look for `(.venv)` at the start of the prompt |
-| `FileNotFoundError` for `../data/...` in a notebook | Run the notebook from the `notebooks/` folder and check the location with `os.getcwd()` |
-| `NameError` or `ModuleNotFoundError` right after opening a notebook | The kernel restarted. Select the `.venv` kernel and use **Run All** |
-| Duplicate rows or IDs in an Athena table | More than one file is under the table's S3 folder. Keep one dataset per folder |
-| `NoCredentialsError` from boto3 | Run `aws configure` on this machine and check that `.env` exists |
-| Athena rejects a script with several statements | Run one statement at a time |
-| ODBC driver not listed when adding a DSN | You opened the 32-bit administrator. Use `C:\Windows\System32\odbcad32.exe` |
-| Power BI shows an "AAD Authentication" or WAM error | Ignore it and choose **Use Data Source Configuration** |
-| Power BI date axis shows full timestamps or sorts wrongly | The API timestamp loads as text because of the `+00:00` suffix. Create a clean date column and sort the month label by a numeric year-month column |
 
 # Data Source
 

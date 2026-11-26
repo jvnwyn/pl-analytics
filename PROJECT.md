@@ -64,6 +64,27 @@ flowchart LR
 
 ---
 
+# Project Structure
+
+```
+pl-analytics/
+├── data/
+│   ├── raw/            # raw API pulls
+│   ├── processed/      # cleaned match data
+│   └── features/       # engineered features and model predictions
+├── notebooks/          # 01 to 08, run in order
+├── lambda/             # AWS Lambda function code
+├── reports/
+│   └── screenshots/    # images used in this README
+├── requirements.txt
+├── requirements-dev.txt
+├── .gitignore
+├── .env                # local secrets (not committed)
+└── README.md
+```
+
+---
+
 # How to Run
 
 ## 1. Prerequisites
@@ -159,6 +180,23 @@ TBLPROPERTIES ('skip.header.line.count'='1');
 ## 6. Run the notebooks
 
 Run the notebooks in the order shown in the workflow table, from inside the `notebooks/` folder (all paths are relative to it). Use the `.venv` kernel, and use **Run All** after a kernel restart so earlier variables are defined again.
+
+---
+
+# Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| PowerShell says running scripts is disabled when activating the venv | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`, then activate again |
+| `aws` command not found | The venv is not active. Look for `(.venv)` at the start of the prompt |
+| `FileNotFoundError` for `../data/...` in a notebook | Run the notebook from the `notebooks/` folder and check the location with `os.getcwd()` |
+| `NameError` or `ModuleNotFoundError` right after opening a notebook | The kernel restarted. Select the `.venv` kernel and use **Run All** |
+| Duplicate rows or IDs in an Athena table | More than one file is under the table's S3 folder. Keep one dataset per folder |
+| `NoCredentialsError` from boto3 | Run `aws configure` on this machine and check that `.env` exists |
+| Athena rejects a script with several statements | Run one statement at a time |
+| ODBC driver not listed when adding a DSN | You opened the 32-bit administrator. Use `C:\Windows\System32\odbcad32.exe` |
+| Power BI shows an "AAD Authentication" or WAM error | Ignore it and choose **Use Data Source Configuration** |
+| Power BI date axis shows full timestamps or sorts wrongly | The API timestamp loads as text because of the `+00:00` suffix. Create a clean date column and sort the month label by a numeric year-month column |
 
 ---
 
