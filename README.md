@@ -2,6 +2,8 @@
 
 An end-to-end analytics pipeline for Premier League match data: collection through a REST API, cleaning and feature engineering in Python, a cloud data lake on AWS (S3, Glue, Athena), Power BI dashboards, and a machine learning model that predicts match outcomes.
 
+> **Looking for setup instructions?** See [PROJECT.md](PROJECT.md) for the objectives, workflow, tools used, roadmap, and how to run the project.
+
 ## Highlights
 
 - **1,140 matches** across 3 seasons (2023/24 to 2025/26) and 25 clubs, collected from the football-data.org API.
@@ -128,114 +130,7 @@ Permutation importance on the test set for the selected model (how much accuracy
 
 ---
 
-# Getting Started
-
-## 1. Prerequisites
-
-- Python 3 (developed on 3.14)
-- An AWS account and an IAM user with S3, Glue, and Athena access
-- A free API key from [football-data.org](https://www.football-data.org/client/register)
-- Power BI Desktop (Windows) and the Amazon Athena ODBC driver, for the dashboards only
-
-## 2. Install
-
-```bash
-python -m venv .venv
-```
-
-Activate the virtual environment.
-
-**Windows (PowerShell).** If activation is blocked with a "running scripts is disabled" error, run this first (it applies to the current terminal session only):
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.venv\Scripts\activate
-```
-
-**macOS / Linux:**
-
-```bash
-source .venv/bin/activate
-```
-
-Then install the dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-## 3. Environment variables
-
-Create a `.env` file in the project root. It is git-ignored and must never be committed.
-
-```
-FOOTBALL_DATA_API_KEY=your_api_key_here
-AWS_REGION=ap-southeast-2
-AWS_S3_BUCKET=your-bucket-name
-AWS_ATHENA_OUTPUT_LOCATION=s3://your-athena-results-bucket/
-```
-
-AWS credentials (access key ID and secret access key) are **not** stored here. Configure them with `aws configure`.
-
-## 4. AWS setup
-
-1. Create two S3 buckets: one for the data lake and one for Athena query results.
-2. Create an IAM user with S3, Glue, and Athena permissions, then run `aws configure` with its access keys and your region.
-3. In the Athena query editor, run `CREATE DATABASE IF NOT EXISTS pl_analytics;`
-4. Upload the datasets with `05_upload_to_s3.ipynb`.
-5. Create an external table for each dataset (example below). Athena runs one statement per query.
-
-**Important:** upload each dataset into its **own S3 folder** (for example `processed/clean_matches/clean_matches.csv`). Athena reads every file under a table's `LOCATION` folder as one table, so files that share a folder are merged and produce duplicate rows.
-
-<details>
-<summary>Example table definition</summary>
-
-```sql
-CREATE EXTERNAL TABLE IF NOT EXISTS pl_analytics.clean_matches_multi_season (
-    id BIGINT,
-    utcDate STRING,
-    status STRING,
-    matchday INT,
-    season STRING,
-    home_team_id BIGINT,
-    home_team_name STRING,
-    away_team_id BIGINT,
-    away_team_name STRING,
-    home_goals INT,
-    away_goals INT,
-    winner STRING
-)
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ','
-LINES TERMINATED BY '\n'
-LOCATION 's3://your-bucket-name/processed/clean_matches_multi_season/'
-TBLPROPERTIES ('skip.header.line.count'='1');
-```
-
-</details>
-
-## 5. Power BI connection
-
-1. Install the Amazon Athena ODBC driver (64-bit).
-2. Open the **64-bit** ODBC Data Source Administrator (`C:\Windows\System32\odbcad32.exe`) and add a System DSN using the Athena driver. Set the region, the S3 output location, and IAM Credentials authentication (access key ID as the username, secret key as the password).
-3. In Power BI Desktop: **Get Data**, **Amazon Athena**, enter the DSN name, choose **Import**, and select **Use Data Source Configuration** when asked for credentials.
-
-## 6. Run the notebooks
-
-Run the notebooks in order, from inside the `notebooks/` folder (all paths are relative to it).
-
-| Notebook | Purpose |
-|---|---|
-| `01_data_collection.ipynb` | Pull matches and teams from football-data.org into `data/raw/` |
-| `02_data_cleaning.ipynb` | Flatten nested API fields and keep finished matches in `data/processed/` |
-| `03_exploratory_analysis.ipynb` | Exploratory analysis: scoring, defense, home advantage, upsets |
-| `04_feature_engineering.ipynb` | Build leakage-safe features in `data/features/` |
-| `05_upload_to_s3.ipynb` | Upload datasets to S3 |
-| `06_sql_analysis.ipynb` | Run Athena SQL queries |
-| `07_machine_learning.ipynb` | Train and evaluate models, export predictions |
-| `08_season_simulation.ipynb` | Season simulation using the trained model |
-
-## Project Structure
+# Project Structure
 
 ```
 pl-analytics/
@@ -254,7 +149,7 @@ pl-analytics/
 └── README.md
 ```
 
-## Troubleshooting
+# Troubleshooting
 
 | Problem | Fix |
 |---|---|
@@ -269,6 +164,6 @@ pl-analytics/
 | Power BI shows an "AAD Authentication" or WAM error | Ignore it and choose **Use Data Source Configuration** |
 | Power BI date axis shows full timestamps or sorts wrongly | The API timestamp loads as text because of the `+00:00` suffix. Create a clean date column and sort the month label by a numeric year-month column |
 
-## Data Source
+# Data Source
 
 Match data comes from [football-data.org](https://www.football-data.org/) (free tier).
